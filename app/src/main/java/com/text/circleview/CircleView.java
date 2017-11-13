@@ -1,6 +1,7 @@
 package com.text.circleview;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -53,15 +54,19 @@ public class CircleView extends View {
     /**
      * 画笔宽度
      */
-    private float paintWidth;
+    private float outPaintWidth;
     /**
      * 同心圆的间距
      */
-    private float interSpace;
+    private float concentricCircleSpace;
     /**
      * 外圈圆和屏幕的间距
      */
-    private float dirts;
+    private float outScreenSpace;
+    /**
+     * 字体大小
+     */
+    private float textSize;
     /**
      * 当前结束角度
      */
@@ -75,7 +80,7 @@ public class CircleView extends View {
      */
     private float totalNum = 0;
 
-    private List<Float> listData;
+    private List<DataBean> listData;
 
 
     public CircleView(Context context) {
@@ -88,13 +93,25 @@ public class CircleView extends View {
 
     public CircleView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        init(context, attrs);
+    }
+
+    private void init(Context context, AttributeSet attrs) {
+        TypedArray array = context.obtainStyledAttributes(attrs, R.styleable.CircleView);
+        textSize=array.getDimension(R.styleable.CircleView_circle_text_size,
+                        dip2px(context, 14));
+        concentricCircleSpace=array.getDimension(R.styleable.CircleView_concentric_circle_space,
+                dip2px(context, 120));
+        outScreenSpace=array.getDimension(R.styleable.CircleView_out_screen_space,
+                dip2px(context, 110));
+        outPaintWidth=array.getDimension(R.styleable.CircleView_out_paint_width,
+                dip2px(context, 2));
+        array.recycle();
+
 
         /**
          * 初始化数据
          */
-        paintWidth = dip2px(context, 2);
-        interSpace = dip2px(context, 120);
-        dirts = dip2px(context, 110);
 
         //外层弧
         mPaintOut = new Paint();
@@ -102,7 +119,7 @@ public class CircleView extends View {
         mPaintOut.setColor(getResources().getColor(R.color.gray));
         mPaintOut.setStyle(Paint.Style.STROKE);
         mPaintOut.setStrokeCap(Paint.Cap.ROUND);
-        mPaintOut.setStrokeWidth(paintWidth);
+        mPaintOut.setStrokeWidth(outPaintWidth);
 
         //内部扇形
         mPaintCurrent = new Paint();
@@ -115,7 +132,7 @@ public class CircleView extends View {
         mPaintText = new Paint();
         mPaintText.setAntiAlias(true);
         mPaintText.setStyle(Paint.Style.STROKE);
-        mPaintText.setTextSize(dip2px(context, 14));
+        mPaintText.setTextSize(textSize);
     }
 
     @Override
@@ -135,58 +152,34 @@ public class CircleView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        float radius = getWidth() / 2 - interSpace - paintWidth;
+        float radius = getWidth() / 2 - concentricCircleSpace - outPaintWidth;
         float point = (getWidth()) / 2;
-
-        float x = ((float) Math.cos(2 * Math.PI / 360 * 18)) * radius;
-        float y = ((float) Math.sin(2 * Math.PI / 360 * 18)) * radius;
-
-        Log.i(TAG, "onDraw: getWidth=" + getWidth() + " height=" + getHeight() + " y=" + y + " x=" + x + " radius=" + radius);
-
-
         //规定所需的区域大小，内层
-        RectF rCurrent = new RectF(interSpace, interSpace,
-                getWidth() - interSpace, getHeight() - interSpace);
+        RectF rCurrent = new RectF(concentricCircleSpace, concentricCircleSpace,
+                getWidth() - concentricCircleSpace, getHeight() - concentricCircleSpace);
         mPaintCurrent.setColor(getResources().getColor(R.color.white));
         canvas.drawRect(rCurrent, mPaintCurrent);
         for (int i = 0; i < listData.size(); i++) {
             mPaintCurrent.setColor(colors[i % colors.length]);
-            currentAngle = 360 * listData.get(i) / totalNum;
+            currentAngle = 360 * listData.get(i).getItemValue() / totalNum;
             //画内部的扇形
             canvas.drawArc(rCurrent, startAngle, currentAngle, true, mPaintCurrent);
             //
             calCoor(canvas, radius, point, currentAngle, startAngle,
-                    colors[i % colors.length], "测试文字");
+                    colors[i % colors.length], listData.get(i).getItemName());
 
             startAngle = currentAngle + startAngle;
         }
         //规定所需的区域大小,外层
-        RectF rOut = new RectF(dirts, dirts,
-                getWidth() - dirts, getHeight() - dirts);
+        RectF rOut = new RectF(outScreenSpace, outScreenSpace,
+                getWidth() - outScreenSpace, getHeight() - outScreenSpace);
         mPaintOut.setColor(Color.GRAY);
         //画外层弧
         canvas.drawArc(rOut, 0, 360, false, mPaintOut);
-
-
-//        mPaintOut.setColor(Color.YELLOW);
-//        canvas.drawLine((getWidth()) / 2, (getHeight()) / 2,
-//                0, 0, mPaintOut);
-//
-//        mPaintOut.setColor(Color.GREEN);
-//        canvas.drawLine((Math.abs(x) + getWidth() / 2),
-//                (Math.abs(y) + getWidth() / 2), 0, 0, mPaintOut);
-//
-//        mPaintOut.setColor(Color.BLUE);
-//        canvas.drawLine(585.4004f ,
-//                433.23703f, 200, 0, mPaintOut);
-//
-//        Log.i(TAG, "onDraw:1 " + Math.abs(x) +"===" + Math.abs(y));
-//        Log.i(TAG, "onDraw:2 " + (Math.abs(x) + getWidth() / 2) + "===" + (Math.abs(y) + getWidth() / 2));
-
     }
 
     /**
-     * 计算坐标
+     * 计算每个扇形弧的中点坐标
      *
      * @param canvas
      * @param radius
@@ -282,10 +275,6 @@ public class CircleView extends View {
         canvas.drawLine(endX, endY, parX, parY, mPaintOut);
         //画文字
         canvas.drawText(title, textX, textY, mPaintText);
-
-
-        Log.i(TAG, "calCoor: dx=" + dx + ",dy=" + dy + ",angle=" + angle);
-        Log.i(TAG, "calCoor: x=" + startX + ",y=" + startY + ",endX=" + endX + ",endY=" + endY);
     }
 
     /**
@@ -296,27 +285,16 @@ public class CircleView extends View {
         return (int) (dpValue * scale + 0.5f);
     }
 
-    public List<Float> getListData() {
+    public List<DataBean> getListData() {
         return listData;
     }
 
-    public void setListData(List<Float> listData) {
+    public void setListData(List<DataBean> listData) {
         this.listData = listData;
-        for (int i = 0; i < listData.size(); i++) {
-            totalNum += listData.get(i);
+        for (DataBean dataBean : listData) {
+            totalNum += dataBean.getItemValue();
         }
         invalidate();
     }
 
-    /**
-     * 得到中点坐标
-     */
-    public void getMid(float currentAngle) {
-        float radius = getWidth() / 2;
-
-        float x = (float) Math.cos(90 - currentAngle) * radius;
-        float y = (float) Math.sin(90 - currentAngle) * radius;
-
-
-    }
 }

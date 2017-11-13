@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="CircleView">
-        
+        <!--字体大小-->
+        <attr name="circle_text_size" format="dimension"></attr>
+        <!--同心圆之间的距离-->
+        <attr name="concentric_circle_space" format="dimension"></attr>
+        <!--外圈和屏幕直接的距离-->
+        <attr name="out_screen_space" format="dimension"></attr>
+        <!--外圈画笔宽度-->
+        <attr name="out_paint_width" format="dimension"></attr>
 
     </declare-styleable>
-    
-    
-    
-    
+
+
 </resources>

@@ -18,30 +18,23 @@ import java.util.List;
  */
 public class MainActivity extends AppCompatActivity {
 
-    private List<Float> listData;
+    private List<DataBean> listData;
     private CircleView circleView;
+    private float[] value = {10f, 20f, 30f, 10f, 60f, 50f, 15f,};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        circleView = (CircleView)findViewById(R.id.circleview);
+        circleView = (CircleView) findViewById(R.id.circleview);
         initData();
     }
 
     private void initData() {
         listData = new ArrayList<>();
-        listData.add(5f);
-        listData.add(10f);
-        listData.add(10f);
-        listData.add(15f);
-        listData.add(30f);
-//        listData.add(5f);
-//        listData.add(50f);
-//        listData.add(30f);
-//        listData.add(20f);
-//        listData.add(90f);
-
+        for (int i = 0; i < value.length; i++) {
+            listData.add(new DataBean("测试数据" + i, value[i]));
+        }
         circleView.setListData(listData);
     }
 }
