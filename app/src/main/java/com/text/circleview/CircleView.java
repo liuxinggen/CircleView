@@ -80,6 +80,11 @@ public class CircleView extends View {
      */
     private float totalNum = 0;
 
+    /**
+     * 偏差量
+     */
+    float offsetX = 40f, offsetY = 20f, offset = 30f, offsetText = 10f;
+
     private List<DataBean> listData;
 
 
@@ -202,8 +207,7 @@ public class CircleView extends View {
         float parX = 0, parY = 0;
         //文字坐标
         float textX = 0, textY = 0;
-        //偏差量
-        float offsetX = 40f, offsetY = 20f, offset = 30f, offsetText = 10f;
+
         //文字宽度
         float textWidth = mPaintText.measureText(title, 0, title.length());
 
